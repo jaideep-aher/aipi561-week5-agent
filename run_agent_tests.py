@@ -1,5 +1,3 @@
-"""Run the 10-query Week 5 report test set."""
-
 import json
 from pathlib import Path
 
