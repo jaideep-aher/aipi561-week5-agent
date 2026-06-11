@@ -1,5 +1,3 @@
-"""Streamlit UI for the Week 5 TechCorp agent."""
-
 import os
 from pathlib import Path
 
