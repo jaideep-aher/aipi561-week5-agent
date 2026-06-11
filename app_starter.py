@@ -134,6 +134,7 @@ class PolicySearchTool(Tool):
             if not query:
                 return "Provide a query to search policies."
 
+            normalized_query = query.lower().strip()
             stopwords = {
                 "the",
                 "what",
@@ -144,20 +145,46 @@ class PolicySearchTool(Tool):
                 "policy",
                 "policies",
                 "documented",
+                "list",
+                "show",
+                "tell",
+                "about",
             }
             terms = [
                 term
-                for term in re.findall(r"[a-z0-9_]+", query.lower())
+                for term in re.findall(r"[a-z0-9_]+", normalized_query)
                 if len(term) > 2 and term not in stopwords
             ]
+            broad_policy_request = any(
+                phrase in normalized_query
+                for phrase in [
+                    "policy",
+                    "policies",
+                    "handbook",
+                    "guidelines",
+                    "documents",
+                ]
+            )
+
+            if broad_policy_request and not terms:
+                matches = self._policy_catalog(max(1, int(limit)))
+                return json.dumps(matches, indent=2)
+
             scored_documents = []
             for doc in self.documents:
                 title = doc.get("title", "")
                 content = doc.get("content", "")
-                haystack = f"{title} {doc.get('category', '')} {content}".lower()
+                category = doc.get("category", "")
+                haystack = f"{title} {category} {content}".lower()
+                title_lower = title.lower()
                 score = sum(haystack.count(term) for term in terms)
-                if query.lower() in haystack:
+                score += sum(title_lower.count(term) * 3 for term in terms)
+                if normalized_query in haystack:
                     score += 5
+                if any(word in title_lower for word in ["policy", "handbook"]):
+                    score += 2
+                if "sales territory" in title_lower:
+                    score -= 3
                 if score > 0:
                     scored_documents.append((score, doc))
 
@@ -165,6 +192,9 @@ class PolicySearchTool(Tool):
             matches = scored_documents[: max(1, int(limit))]
 
             if not matches:
+                if broad_policy_request:
+                    matches = self._policy_catalog(max(1, int(limit)))
+                    return json.dumps(matches, indent=2)
                 return f"No policy documents found for: {query}"
 
             results = []
@@ -185,6 +215,28 @@ class PolicySearchTool(Tool):
         except Exception as e:
             logger.error(f"Policy search error: {e}")
             return f"Error: {str(e)}"
+
+    def _policy_catalog(self, limit: int) -> list:
+        catalog = []
+        for doc in self.documents:
+            title = doc.get("title", "")
+            title_lower = title.lower()
+            if "sales territory" in title_lower:
+                continue
+            if not any(word in title_lower for word in ["policy", "handbook", "guidelines"]):
+                continue
+            content = " ".join(doc.get("content", "").split())
+            catalog.append(
+                {
+                    "id": doc.get("id"),
+                    "title": title,
+                    "category": doc.get("category"),
+                    "last_updated": doc.get("last_updated"),
+                    "score": 1,
+                    "snippet": content[:500],
+                }
+            )
+        return catalog[:limit]
 
     def _make_snippet(self, content: str, terms: list) -> str:
         """Return a 500-character snippet centered near the first matching term."""
