@@ -30,6 +30,8 @@ WELCOME_MESSAGE = (
     "find the answer."
 )
 
+PORTFOLIO_URL = "https://aher.dev"
+
 
 def inject_styles() -> None:
     st.markdown(
@@ -108,6 +110,55 @@ def inject_styles() -> None:
         div[data-testid="stChatInput"] textarea {
             border-radius: 12px;
         }
+        .tc-credit-top {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: #c7d2fe;
+            background: rgba(15, 19, 34, 0.55);
+            border: 1px solid rgba(129, 140, 248, 0.30);
+            text-decoration: none;
+        }
+        .tc-credit-top:hover {
+            color: #ffffff;
+            border-color: rgba(129, 140, 248, 0.65);
+        }
+        .tc-credit-fixed {
+            position: fixed;
+            right: 18px;
+            bottom: 16px;
+            z-index: 1000;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            background: rgba(13, 16, 30, 0.85);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            box-shadow: 0 10px 28px rgba(8, 10, 20, 0.5);
+            text-decoration: none;
+            backdrop-filter: blur(6px);
+        }
+        .tc-credit-fixed:hover {
+            color: #ffffff;
+            border-color: rgba(129, 140, 248, 0.7);
+            box-shadow: 0 12px 32px rgba(56, 189, 248, 0.25);
+        }
+        .tc-credit-fixed .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: #38bdf8;
+            box-shadow: 0 0 8px #38bdf8;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -116,14 +167,30 @@ def inject_styles() -> None:
 
 def render_hero() -> None:
     st.markdown(
-        """
+        f"""
         <div class="tc-hero">
+            <a class="tc-credit-top" href="{PORTFOLIO_URL}" target="_blank" rel="noopener">
+                Developed by aher.dev
+            </a>
+            <br>
             <span class="tc-badge">TechCorp Policy Pilot</span>
             <h1>TechCorp Agent</h1>
             <p>An AI assistant that routes every question to the right internal
             tool, looking up employees, searching company policy, and checking
             expense approval limits in real time.</p>
         </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_credit_badge() -> None:
+    st.markdown(
+        f"""
+        <a class="tc-credit-fixed" href="{PORTFOLIO_URL}" target="_blank" rel="noopener">
+            <span class="dot"></span>
+            Developed by aher.dev
+        </a>
         """,
         unsafe_allow_html=True,
     )
@@ -191,6 +258,7 @@ def main() -> None:
         layout="wide",
     )
     inject_styles()
+    render_credit_badge()
 
     agent_error = None
     try:
